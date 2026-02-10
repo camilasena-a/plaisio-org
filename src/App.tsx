@@ -44,7 +44,7 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <WeekSelector />
       <div className="flex-1 overflow-hidden">
         <Board

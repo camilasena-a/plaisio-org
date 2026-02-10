@@ -35,12 +35,12 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 cursor-grab active:cursor-grabbing hover:shadow-md dark:hover:shadow-lg transition-shadow ${
         isDragging ? 'ring-2 ring-primary-500' : ''
       }`}
     >
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-semibold text-gray-900 text-sm flex-1 pr-2">
+        <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex-1 pr-2">
           {task.title}
         </h3>
         <div className="flex gap-1">
@@ -49,26 +49,26 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
               e.stopPropagation();
               onEdit(task);
             }}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
             aria-label="Editar tarefa"
           >
-            <EditIcon className="w-4 h-4 text-gray-600" />
+            <EditIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(task.id);
             }}
-            className="p-1 hover:bg-red-50 rounded transition-colors"
+            className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
             aria-label="Deletar tarefa"
           >
-            <TrashIcon className="w-4 h-4 text-red-600" />
+            <TrashIcon className="w-4 h-4 text-red-600 dark:text-red-400" />
           </button>
         </div>
       </div>
 
       {task.description && (
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
           {task.description}
         </p>
       )}
@@ -81,13 +81,13 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
         </span>
 
         {task.subject && (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
             {task.subject}
           </span>
         )}
 
         {task.dueDate && (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
             <CalendarIcon className="w-3 h-3" />
             <span>{formatDate(task.dueDate)}</span>
           </div>
