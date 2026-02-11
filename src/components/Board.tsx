@@ -116,7 +116,7 @@ export function Board({ onAddTask, onEditTask, onDeleteTask }: BoardProps) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-6 p-6 overflow-x-auto h-full">
+      <div className="flex gap-6 p-6 overflow-x-auto h-full justify-center">
         {columns.map((column) => (
           <Column
             key={column.id}

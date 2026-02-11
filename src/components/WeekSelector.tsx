@@ -21,13 +21,15 @@ export function WeekSelector() {
   };
 
   return (
-    <div className="flex items-center justify-between bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-      <div className="flex items-center gap-4">
+    <div className="flex items-center bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      {/* Seção Esquerda - Logo */}
+      <div className="flex items-center gap-4 flex-shrink-0">
         <CalendarIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">Plaisio Org</h1>
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* Seção Central - Datas da Semana */}
+      <div className="flex-1 flex items-center justify-center gap-4">
         <button
           onClick={handlePreviousWeek}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -50,7 +52,10 @@ export function WeekSelector() {
         >
           <ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         </button>
+      </div>
 
+      {/* Seção Direita - Controles */}
+      <div className="flex items-center gap-4 flex-shrink-0">
         <button
           onClick={handleCurrentWeek}
           className="px-4 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
