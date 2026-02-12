@@ -11,8 +11,10 @@ import {
 import { useState } from 'react';
 import type { Task, TaskStatus } from '@/types';
 import { useStore } from '@/store/useStore';
+import { useToastStore } from '@/store/useToastStore';
 import { Column } from './Column';
 import { TaskCard } from './TaskCard';
+import { COLUMN_CONFIG } from '@/utils/constants';
 
 interface BoardProps {
   onAddTask: (status: TaskStatus) => void;
@@ -22,6 +24,7 @@ interface BoardProps {
 
 export function Board({ onAddTask, onEditTask, onDeleteTask }: BoardProps) {
   const { columns, moveTaskBetweenColumns, reorderTasks } = useStore();
+  const { addToast } = useToastStore();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   const sensors = useSensors(
@@ -74,6 +77,8 @@ export function Board({ onAddTask, onEditTask, onDeleteTask }: BoardProps) {
           destinationColumn.id as TaskStatus,
           destinationColumn.tasks.length
         );
+        const destinationTitle = COLUMN_CONFIG[destinationColumn.id].title;
+        addToast(`Tarefa movida para "${destinationTitle}"`, 'success');
       }
       return;
     }
@@ -105,6 +110,8 @@ export function Board({ onAddTask, onEditTask, onDeleteTask }: BoardProps) {
           targetColumn.id as TaskStatus,
           destinationIndex
         );
+        const destinationTitle = COLUMN_CONFIG[targetColumn.id].title;
+        addToast(`Tarefa movida para "${destinationTitle}"`, 'success');
       }
     }
   };

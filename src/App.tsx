@@ -4,9 +4,12 @@ import type { Task, TaskStatus } from '@/types';
 import { Board } from './components/Board';
 import { TaskModal } from './components/TaskModal';
 import { WeekSelector } from './components/WeekSelector';
+import { ToastContainer } from './components/Toast';
+import { useToastStore } from '@/store/useToastStore';
 
 function App() {
   const { addTask, updateTask, deleteTask } = useStore();
+  const { addToast } = useToastStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [initialStatus, setInitialStatus] = useState<TaskStatus>('todo');
@@ -25,14 +28,17 @@ function App() {
   const handleDeleteTask = (taskId: string) => {
     if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
       deleteTask(taskId);
+      addToast('Tarefa excluída com sucesso', 'success');
     }
   };
 
   const handleSaveTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingTask) {
       updateTask(editingTask.id, taskData);
+      addToast('Tarefa atualizada com sucesso', 'success');
     } else {
       addTask(taskData);
+      addToast('Tarefa criada com sucesso', 'success');
     }
     setIsModalOpen(false);
     setEditingTask(null);
@@ -60,6 +66,7 @@ function App() {
         initialTask={editingTask}
         initialStatus={initialStatus}
       />
+      <ToastContainer />
     </div>
   );
 }

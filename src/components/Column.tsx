@@ -84,13 +84,20 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
               Nenhuma tarefa ainda
             </div>
           ) : (
-            column.tasks.map((task) => (
-              <TaskCard
+            column.tasks.map((task, index) => (
+              <div
                 key={task.id}
-                task={task}
-                onEdit={onEditTask}
-                onDelete={onDeleteTask}
-              />
+                className="animate-fade-in"
+                style={{
+                  animationDelay: `${index * 0.05}s`,
+                }}
+              >
+                <TaskCard
+                  task={task}
+                  onEdit={onEditTask}
+                  onDelete={onDeleteTask}
+                />
+              </div>
             ))
           )}
         </SortableContext>
