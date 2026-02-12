@@ -37,37 +37,39 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 p-4 cursor-grab active:cursor-grabbing hover:shadow-md dark:hover:shadow-lg transition-shadow ${
-        isDragging ? 'ring-2 ring-primary-500' : ''
+      className={`group bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 p-4 cursor-grab active:cursor-grabbing transition-all duration-200 ${
+        isDragging 
+          ? 'ring-2 ring-primary-500 scale-105 shadow-xl' 
+          : 'hover:shadow-lg hover:scale-[1.02] hover:border-primary-300 dark:hover:border-primary-600'
       } ${
         isOverdue
-          ? 'border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-900/10'
+          ? 'border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20'
           : isDueToday
-          ? 'border-yellow-400 dark:border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10'
-          : 'border-gray-200 dark:border-gray-700'
+          ? 'border-yellow-400 dark:border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
+          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
       }`}
     >
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex-1 pr-2">
+        <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex-1 pr-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
           {task.title}
         </h3>
-        <div className="flex gap-1">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onEdit(task);
             }}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
             aria-label="Editar tarefa"
           >
-            <EditIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <EditIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(task.id);
             }}
-            className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
             aria-label="Deletar tarefa"
           >
             <TrashIcon className="w-4 h-4 text-red-600 dark:text-red-400" />
