@@ -2,8 +2,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Task } from '@/types';
 import { PRIORITY_CONFIG } from '@/utils/constants';
-import { formatDate } from '@/utils/date';
-import { TrashIcon, EditIcon, CalendarIcon } from './icons';
+import { formatDate, isTaskOverdue, isTaskDueToday } from '@/utils/date';
+import { TrashIcon, EditIcon, CalendarIcon, AlertIcon } from './icons';
 
 interface TaskCardProps {
   task: Task;
@@ -28,6 +28,8 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
   };
 
   const priorityConfig = PRIORITY_CONFIG[task.priority];
+  const isOverdue = task.dueDate ? isTaskOverdue(task.dueDate) : false;
+  const isDueToday = task.dueDate ? isTaskDueToday(task.dueDate) : false;
 
   return (
     <div
@@ -35,8 +37,14 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 cursor-grab active:cursor-grabbing hover:shadow-md dark:hover:shadow-lg transition-shadow ${
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 p-4 cursor-grab active:cursor-grabbing hover:shadow-md dark:hover:shadow-lg transition-shadow ${
         isDragging ? 'ring-2 ring-primary-500' : ''
+      } ${
+        isOverdue
+          ? 'border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-900/10'
+          : isDueToday
+          ? 'border-yellow-400 dark:border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10'
+          : 'border-gray-200 dark:border-gray-700'
       }`}
     >
       <div className="flex items-start justify-between mb-2">
@@ -74,6 +82,19 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
       )}
 
       <div className="flex flex-wrap gap-2 items-center">
+        {isOverdue && (
+          <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-500 dark:bg-red-600 text-white flex items-center gap-1">
+            <AlertIcon className="w-3 h-3" />
+            Vencida
+          </span>
+        )}
+
+        {isDueToday && !isOverdue && (
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-950">
+            Hoje
+          </span>
+        )}
+
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${priorityConfig.color}`}
         >
@@ -87,7 +108,13 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
         )}
 
         {task.dueDate && (
-          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+          <div className={`flex items-center gap-1 text-xs ${
+            isOverdue 
+              ? 'text-red-600 dark:text-red-400 font-semibold' 
+              : isDueToday
+              ? 'text-yellow-700 dark:text-yellow-400 font-semibold'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}>
             <CalendarIcon className="w-3 h-3" />
             <span>{formatDate(task.dueDate)}</span>
           </div>

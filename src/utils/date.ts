@@ -32,3 +32,23 @@ export function getPreviousWeek(currentStartDate: string): { startDate: string; 
   const previousWeek = addDays(date, -7);
   return getWeekDates(previousWeek);
 }
+
+export function isTaskOverdue(dueDate: string): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  
+  return due < today;
+}
+
+export function isTaskDueToday(dueDate: string): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  
+  return due.getTime() === today.getTime();
+}
