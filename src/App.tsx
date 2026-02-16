@@ -5,6 +5,7 @@ import { Board } from './components/Board';
 import { TaskModal } from './components/TaskModal';
 import { WeekSelector } from './components/WeekSelector';
 import { ToastContainer } from './components/Toast';
+import { ConfirmDialog } from './components/ConfirmDialog';
 import { useToastStore } from '@/store/useToastStore';
 
 function App() {
@@ -13,6 +14,10 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [initialStatus, setInitialStatus] = useState<TaskStatus>('todo');
+  
+  // Estados para o modal de confirmação
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
   const handleAddTask = (status: TaskStatus) => {
     setInitialStatus(status);
@@ -26,10 +31,22 @@ function App() {
   };
 
   const handleDeleteTask = (taskId: string) => {
-    if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
-      deleteTask(taskId);
+    setTaskToDelete(taskId);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (taskToDelete) {
+      deleteTask(taskToDelete);
       addToast('Tarefa excluída com sucesso', 'success');
+      setTaskToDelete(null);
     }
+    setIsConfirmOpen(false);
+  };
+
+  const handleCancelDelete = () => {
+    setIsConfirmOpen(false);
+    setTaskToDelete(null);
   };
 
   const handleSaveTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -65,6 +82,16 @@ function App() {
         onSave={handleSaveTask}
         initialTask={editingTask}
         initialStatus={initialStatus}
+      />
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        title="Excluir Tarefa"
+        message="Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita."
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="danger"
       />
       <ToastContainer />
     </div>
