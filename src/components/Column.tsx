@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -6,9 +6,10 @@ import {
 } from '@dnd-kit/sortable';
 import type { Column as ColumnType, Task } from '@/types';
 import { TaskCard } from './TaskCard';
-import { COLUMN_CONFIG } from '@/utils/constants';
-import { PlusIcon } from './icons';
+import { COLUMN_CONFIG, PRIORITY_CONFIG } from '@/utils/constants';
+import { PlusIcon, FilterIcon, XIcon } from './icons';
 import { useStore } from '@/store/useStore';
+import { useColumnFilterStore } from '@/store/useColumnFilterStore';
 import { sortTasksByDueDateAndPriority } from '@/utils/date';
 
 interface ColumnProps {
@@ -24,14 +25,36 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
   });
 
   const { columns } = useStore();
+  const { columnFilters, togglePriority, clearColumnFilter, hasActiveFilter } = useColumnFilterStore();
   const config = COLUMN_CONFIG[column.id];
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  // Ordena as tarefas por data de entrega e depois por prioridade
+  const activeFilters = columnFilters[column.id] || [];
+  const hasFilter = hasActiveFilter(column.id);
+  
+  // Filtra e ordena as tarefas
   const sortedTasks = useMemo(() => {
-    return sortTasksByDueDateAndPriority(column.tasks);
-  }, [column.tasks]);
+    let tasksToShow = column.tasks;
+    
+    // Se há filtros ativos, filtra por prioridade
+    if (hasFilter && activeFilters.length > 0) {
+      tasksToShow = tasksToShow.filter((task) => activeFilters.includes(task.priority));
+    }
+    
+    // Ordena por data de entrega e depois por prioridade
+    return sortTasksByDueDateAndPriority(tasksToShow);
+  }, [column.tasks, activeFilters, hasFilter]);
   
   const taskIds = sortedTasks.map((task) => task.id);
+  
+  const handleTogglePriority = (priority: 'low' | 'medium' | 'high') => {
+    togglePriority(column.id, priority);
+  };
+  
+  const handleClearFilter = () => {
+    clearColumnFilter(column.id);
+    setIsFilterOpen(false);
+  };
 
   // Calcular progresso da coluna
   const totalTasks = columns.reduce((sum, col) => sum + col.tasks.length, 0);
@@ -53,16 +76,89 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
               {column.title}
             </h2>
             <span className={`bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-full border ${config.borderColor}`}>
-              {column.tasks.length}
+              {hasFilter ? sortedTasks.length : column.tasks.length}
             </span>
           </div>
-          <button
-            onClick={() => onAddTask(column.id)}
-            className={`p-2 rounded-lg transition-all duration-200 ${config.buttonTextColor} ${config.buttonHoverColor} hover:scale-110 active:scale-95`}
-            aria-label={`Adicionar tarefa em ${column.title}`}
-          >
-            <PlusIcon className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Botão de filtro */}
+            <div className="relative">
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  hasFilter
+                    ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                    : `${config.buttonTextColor} ${config.buttonHoverColor}`
+                } hover:scale-110 active:scale-95`}
+                aria-label={`Filtrar por prioridade em ${column.title}`}
+                title="Filtrar por prioridade"
+              >
+                <FilterIcon className="w-5 h-5" />
+              </button>
+              
+              {/* Dropdown de filtro */}
+              {isFilterOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setIsFilterOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-3 z-20 min-w-[180px]">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Filtrar por prioridade
+                      </span>
+                      {hasFilter && (
+                        <button
+                          onClick={handleClearFilter}
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                          aria-label="Limpar filtros"
+                          title="Limpar filtros"
+                        >
+                          <XIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {(['low', 'medium', 'high'] as const).map((priority) => {
+                        const isSelected = activeFilters.includes(priority);
+                        const priorityConfig = PRIORITY_CONFIG[priority];
+                        return (
+                          <label
+                            key={priority}
+                            className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleTogglePriority(priority)}
+                              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-400"
+                            />
+                            <span className={`text-sm ${priorityConfig.color} px-2 py-1 rounded-full`}>
+                              {priorityConfig.label}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {activeFilters.length === 0 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                        Selecione para filtrar
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+            
+            {/* Botão adicionar tarefa */}
+            <button
+              onClick={() => onAddTask(column.id)}
+              className={`p-2 rounded-lg transition-all duration-200 ${config.buttonTextColor} ${config.buttonHoverColor} hover:scale-110 active:scale-95`}
+              aria-label={`Adicionar tarefa em ${column.title}`}
+            >
+              <PlusIcon className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Barra de progresso */}
