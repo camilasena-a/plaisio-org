@@ -1,4 +1,4 @@
-import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addDays, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 
 export function getWeekDates(date: Date) {
@@ -12,43 +12,39 @@ export function getWeekDates(date: Date) {
 }
 
 export function formatDate(dateString: string): string {
-  return format(new Date(dateString), "dd 'de' MMMM", { locale: ptBR });
+  // Usa parseISO para evitar problemas de timezone
+  const date = parseISO(dateString);
+  return format(date, "dd 'de' MMMM", { locale: ptBR });
 }
 
 export function formatWeekRange(startDate: string, endDate: string): string {
-  const start = format(new Date(startDate), "dd 'de' MMMM", { locale: ptBR });
-  const end = format(new Date(endDate), "dd 'de' MMMM", { locale: ptBR });
+  const start = format(parseISO(startDate), "dd 'de' MMMM", { locale: ptBR });
+  const end = format(parseISO(endDate), "dd 'de' MMMM", { locale: ptBR });
   return `${start} - ${end}`;
 }
 
 export function getNextWeek(currentStartDate: string): { startDate: string; endDate: string } {
-  const date = new Date(currentStartDate);
+  const date = parseISO(currentStartDate);
   const nextWeek = addDays(date, 7);
   return getWeekDates(nextWeek);
 }
 
 export function getPreviousWeek(currentStartDate: string): { startDate: string; endDate: string } {
-  const date = new Date(currentStartDate);
+  const date = parseISO(currentStartDate);
   const previousWeek = addDays(date, -7);
   return getWeekDates(previousWeek);
 }
 
 export function isTaskOverdue(dueDate: string): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const due = new Date(dueDate);
-  due.setHours(0, 0, 0, 0);
+  const today = startOfDay(new Date());
+  const due = startOfDay(parseISO(dueDate));
   
   return due < today;
 }
 
 export function isTaskDueToday(dueDate: string): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const due = new Date(dueDate);
-  due.setHours(0, 0, 0, 0);
+  const today = startOfDay(new Date());
+  const due = startOfDay(parseISO(dueDate));
   
   return due.getTime() === today.getTime();
 }

@@ -31,22 +31,43 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
   const isOverdue = task.dueDate ? isTaskOverdue(task.dueDate) : false;
   const isDueToday = task.dueDate ? isTaskDueToday(task.dueDate) : false;
 
+  // Determina as cores do card baseado na prioridade ou status de vencimento
+  const getCardStyles = () => {
+    // Prioridade: vencido > vence hoje > prioridade normal
+    if (isOverdue) {
+      return {
+        bg: 'bg-red-50 dark:bg-red-900/10',
+        border: 'border-red-500 dark:border-red-600',
+        hover: 'hover:bg-red-100 dark:hover:bg-red-900/20',
+      };
+    }
+    if (isDueToday) {
+      return {
+        bg: 'bg-yellow-50 dark:bg-yellow-900/10',
+        border: 'border-yellow-400 dark:border-yellow-500',
+        hover: 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20',
+      };
+    }
+    // Usa as cores da prioridade
+    return {
+      bg: priorityConfig.cardBg,
+      border: priorityConfig.cardBorder,
+      hover: priorityConfig.cardHover,
+    };
+  };
+
+  const cardStyles = getCardStyles();
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className={`group bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 p-4 cursor-grab active:cursor-grabbing transition-all duration-200 ${
+      className={`group ${cardStyles.bg} rounded-lg shadow-sm border-2 ${cardStyles.border} p-4 cursor-grab active:cursor-grabbing transition-all duration-200 ${
         isDragging 
           ? 'ring-2 ring-primary-500 scale-105 shadow-xl z-50' 
-          : 'hover:shadow-lg hover:scale-[1.02] hover:border-primary-300 dark:hover:border-primary-600'
-      } ${
-        isOverdue
-          ? 'border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20'
-          : isDueToday
-          ? 'border-yellow-400 dark:border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+          : `hover:shadow-lg hover:scale-[1.02] ${cardStyles.hover}`
       }`}
     >
       <div className="flex items-start justify-between mb-2">

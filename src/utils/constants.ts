@@ -47,7 +47,25 @@ export const COLUMN_CONFIG: Record<TaskStatus, {
 };
 
 export const PRIORITY_CONFIG = {
-  low: { label: 'Baixa', color: 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' },
-  medium: { label: 'Média', color: 'bg-yellow-200 dark:bg-yellow-800/50 text-yellow-800 dark:text-yellow-200' },
-  high: { label: 'Alta', color: 'bg-red-200 dark:bg-red-800/50 text-red-800 dark:text-red-200' },
+  low: { 
+    label: 'Baixa', 
+    color: 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
+    cardBg: 'bg-gray-50 dark:bg-gray-800/80',
+    cardBorder: 'border-gray-300 dark:border-gray-600',
+    cardHover: 'hover:bg-gray-100 dark:hover:bg-gray-700/70',
+  },
+  medium: { 
+    label: 'Média', 
+    color: 'bg-yellow-200 dark:bg-yellow-800/50 text-yellow-800 dark:text-yellow-200',
+    cardBg: 'bg-yellow-50 dark:bg-yellow-900/20',
+    cardBorder: 'border-yellow-300 dark:border-yellow-600',
+    cardHover: 'hover:bg-yellow-100 dark:hover:bg-yellow-900/30',
+  },
+  high: { 
+    label: 'Alta', 
+    color: 'bg-red-200 dark:bg-red-800/50 text-red-800 dark:text-red-200',
+    cardBg: 'bg-red-50 dark:bg-red-900/20',
+    cardBorder: 'border-red-300 dark:border-red-600',
+    cardHover: 'hover:bg-red-100 dark:hover:bg-red-900/30',
+  },
 } as const;
