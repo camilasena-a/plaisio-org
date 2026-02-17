@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -8,6 +9,7 @@ import { TaskCard } from './TaskCard';
 import { COLUMN_CONFIG } from '@/utils/constants';
 import { PlusIcon } from './icons';
 import { useStore } from '@/store/useStore';
+import { sortTasksByDueDateAndPriority } from '@/utils/date';
 
 interface ColumnProps {
   column: ColumnType;
@@ -23,7 +25,13 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
 
   const { columns } = useStore();
   const config = COLUMN_CONFIG[column.id];
-  const taskIds = column.tasks.map((task) => task.id);
+  
+  // Ordena as tarefas por data de entrega e depois por prioridade
+  const sortedTasks = useMemo(() => {
+    return sortTasksByDueDateAndPriority(column.tasks);
+  }, [column.tasks]);
+  
+  const taskIds = sortedTasks.map((task) => task.id);
 
   // Calcular progresso da coluna
   const totalTasks = columns.reduce((sum, col) => sum + col.tasks.length, 0);
@@ -79,12 +87,12 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
         } min-h-[400px]`}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          {column.tasks.length === 0 ? (
+          {sortedTasks.length === 0 ? (
             <div className="text-center text-gray-400 dark:text-gray-500 py-8 text-sm">
               Nenhuma tarefa ainda
             </div>
           ) : (
-            column.tasks.map((task, index) => (
+            sortedTasks.map((task, index) => (
               <div
                 key={task.id}
                 className="animate-fade-in"

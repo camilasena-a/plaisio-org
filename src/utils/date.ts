@@ -48,3 +48,35 @@ export function isTaskDueToday(dueDate: string): boolean {
   
   return due.getTime() === today.getTime();
 }
+
+/**
+ * Ordena tarefas por data de entrega e depois por prioridade
+ * Ordem: tarefas com data (mais próximas primeiro) > tarefas sem data (ordenadas por prioridade)
+ */
+export function sortTasksByDueDateAndPriority<T extends { dueDate?: string; priority: 'low' | 'medium' | 'high' }>(
+  tasks: T[]
+): T[] {
+  const priorityOrder = { high: 3, medium: 2, low: 1 };
+  
+  return [...tasks].sort((a, b) => {
+    // Se ambas têm data de entrega, ordena por data
+    if (a.dueDate && b.dueDate) {
+      const dateA = parseISO(a.dueDate).getTime();
+      const dateB = parseISO(b.dueDate).getTime();
+      
+      if (dateA !== dateB) {
+        return dateA - dateB; // Mais próximas primeiro
+      }
+      
+      // Se a data é igual, ordena por prioridade
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    }
+    
+    // Se apenas uma tem data, a com data vem primeiro
+    if (a.dueDate && !b.dueDate) return -1;
+    if (!a.dueDate && b.dueDate) return 1;
+    
+    // Se nenhuma tem data, ordena apenas por prioridade
+    return priorityOrder[b.priority] - priorityOrder[a.priority];
+  });
+}
