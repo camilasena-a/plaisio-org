@@ -20,6 +20,6 @@ export interface Column {
 
 export interface Board {
   columns: Column[];
-  weekStartDate: string;
-  weekEndDate: string;
+  monthStartDate: string;
+  monthEndDate: string;
 }

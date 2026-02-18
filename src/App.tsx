@@ -3,7 +3,7 @@ import { useStore } from '@/store/useStore';
 import type { Task, TaskStatus } from '@/types';
 import { Board } from './components/Board';
 import { TaskModal } from './components/TaskModal';
-import { WeekSelector } from './components/WeekSelector';
+import { MonthSelector } from './components/MonthSelector';
 import { ToastContainer } from './components/Toast';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { useToastStore } from '@/store/useToastStore';
@@ -68,7 +68,7 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <WeekSelector />
+      <MonthSelector />
       <div className="flex-1 overflow-hidden">
         <Board
           onAddTask={handleAddTask}

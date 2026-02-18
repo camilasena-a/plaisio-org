@@ -10,7 +10,7 @@ import { COLUMN_CONFIG, PRIORITY_CONFIG } from '@/utils/constants';
 import { PlusIcon, FilterIcon, XIcon } from './icons';
 import { useStore } from '@/store/useStore';
 import { useColumnFilterStore } from '@/store/useColumnFilterStore';
-import { sortTasksByDueDateAndPriority } from '@/utils/date';
+import { sortTasksByDueDateAndPriority, isTaskInMonth } from '@/utils/date';
 
 interface ColumnProps {
   column: ColumnType;
@@ -24,7 +24,7 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
     id: column.id,
   });
 
-  const { columns } = useStore();
+  const { columns, monthStartDate, monthEndDate } = useStore();
   const { columnFilters, togglePriority, clearColumnFilter, hasActiveFilter } = useColumnFilterStore();
   const config = COLUMN_CONFIG[column.id];
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -36,6 +36,11 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
   const sortedTasks = useMemo(() => {
     let tasksToShow = column.tasks;
     
+    // Filtra por mês selecionado (mostra apenas tarefas com dueDate no mês atual)
+    tasksToShow = tasksToShow.filter((task) => 
+      isTaskInMonth(task.dueDate, monthStartDate, monthEndDate)
+    );
+    
     // Se há filtros ativos, filtra por prioridade
     if (hasFilter && activeFilters.length > 0) {
       tasksToShow = tasksToShow.filter((task) => activeFilters.includes(task.priority));
@@ -43,7 +48,7 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
     
     // Ordena por data de entrega e depois por prioridade
     return sortTasksByDueDateAndPriority(tasksToShow);
-  }, [column.tasks, activeFilters, hasFilter]);
+  }, [column.tasks, activeFilters, hasFilter, monthStartDate, monthEndDate]);
   
   const taskIds = sortedTasks.map((task) => task.id);
   
@@ -76,7 +81,7 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
               {column.title}
             </h2>
             <span className={`bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-full border ${config.borderColor}`}>
-              {hasFilter ? sortedTasks.length : column.tasks.length}
+              {sortedTasks.length}
             </span>
           </div>
           <div className="flex items-center gap-2">

@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Task, TaskStatus, Column } from '@/types';
-import { getWeekDates } from '@/utils/date';
+import { getMonthDates } from '@/utils/date';
 
 interface StoreState {
   columns: Column[];
-  weekStartDate: string;
-  weekEndDate: string;
+  monthStartDate: string;
+  monthEndDate: string;
   
   // Actions
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -20,8 +20,8 @@ interface StoreState {
     destinationStatus: TaskStatus,
     destinationIndex: number
   ) => void;
-  updateWeek: (startDate: string, endDate: string) => void;
-  initializeWeek: () => void;
+  updateMonth: (startDate: string, endDate: string) => void;
+  initializeMonth: () => void;
 }
 
 const initialColumns: Column[] = [
@@ -33,12 +33,12 @@ const initialColumns: Column[] = [
 export const useStore = create<StoreState>()(
   persist(
     (set) => {
-      const { startDate, endDate } = getWeekDates(new Date());
+      const { startDate, endDate } = getMonthDates(new Date());
       
       return {
         columns: initialColumns,
-        weekStartDate: startDate,
-        weekEndDate: endDate,
+        monthStartDate: startDate,
+        monthEndDate: endDate,
         
         addTask: (taskData) => {
           const newTask: Task = {
@@ -166,13 +166,13 @@ export const useStore = create<StoreState>()(
           });
         },
         
-        updateWeek: (startDate, endDate) => {
-          set({ weekStartDate: startDate, weekEndDate: endDate });
+        updateMonth: (startDate, endDate) => {
+          set({ monthStartDate: startDate, monthEndDate: endDate });
         },
         
-        initializeWeek: () => {
-          const { startDate, endDate } = getWeekDates(new Date());
-          set({ weekStartDate: startDate, weekEndDate: endDate });
+        initializeMonth: () => {
+          const { startDate, endDate } = getMonthDates(new Date());
+          set({ monthStartDate: startDate, monthEndDate: endDate });
         },
       };
     },
@@ -180,8 +180,8 @@ export const useStore = create<StoreState>()(
       name: 'plaisio-org-storage',
       partialize: (state) => ({
         columns: state.columns,
-        weekStartDate: state.weekStartDate,
-        weekEndDate: state.weekEndDate,
+        monthStartDate: state.monthStartDate,
+        monthEndDate: state.monthEndDate,
       }),
     }
   )
