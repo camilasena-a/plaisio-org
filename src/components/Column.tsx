@@ -10,7 +10,7 @@ import { COLUMN_CONFIG, PRIORITY_CONFIG } from '@/utils/constants';
 import { PlusIcon, FilterIcon, XIcon } from './icons';
 import { useStore } from '@/store/useStore';
 import { useColumnFilterStore } from '@/store/useColumnFilterStore';
-import { sortTasksByDueDateAndPriority, isTaskInMonth } from '@/utils/date';
+import { sortTasksByDueDateAndPriority, isTaskInMonth, getPreviousMonth, getMonthDates } from '@/utils/date';
 
 interface ColumnProps {
   column: ColumnType;
@@ -36,10 +36,32 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
   const sortedTasks = useMemo(() => {
     let tasksToShow = column.tasks;
     
-    // Filtra por mês selecionado (mostra apenas tarefas com dueDate no mês atual)
-    tasksToShow = tasksToShow.filter((task) => 
-      isTaskInMonth(task.dueDate, monthStartDate, monthEndDate)
-    );
+    // Para tarefas concluídas, mostra apenas do mês atual ou anterior (histórico recente)
+    if (column.id === 'done') {
+      // Verifica se estamos visualizando o mês atual
+      const today = new Date();
+      const currentMonthDates = getMonthDates(today);
+      const isCurrentMonth = monthStartDate === currentMonthDates.startDate && monthEndDate === currentMonthDates.endDate;
+      
+      if (isCurrentMonth) {
+        // Se estamos no mês atual, mostra tarefas do mês atual e anterior
+        const previousMonth = getPreviousMonth(monthStartDate);
+        tasksToShow = tasksToShow.filter((task) => 
+          isTaskInMonth(task.dueDate, monthStartDate, monthEndDate) ||
+          isTaskInMonth(task.dueDate, previousMonth.startDate, previousMonth.endDate)
+        );
+      } else {
+        // Se estamos em outro mês, mostra apenas tarefas concluídas desse mês
+        tasksToShow = tasksToShow.filter((task) => 
+          isTaskInMonth(task.dueDate, monthStartDate, monthEndDate)
+        );
+      }
+    } else {
+      // Para outras colunas, filtra por mês selecionado normalmente
+      tasksToShow = tasksToShow.filter((task) => 
+        isTaskInMonth(task.dueDate, monthStartDate, monthEndDate)
+      );
+    }
     
     // Se há filtros ativos, filtra por prioridade
     if (hasFilter && activeFilters.length > 0) {
@@ -48,7 +70,7 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
     
     // Ordena por data de entrega e depois por prioridade
     return sortTasksByDueDateAndPriority(tasksToShow);
-  }, [column.tasks, activeFilters, hasFilter, monthStartDate, monthEndDate]);
+  }, [column.tasks, column.id, activeFilters, hasFilter, monthStartDate, monthEndDate]);
   
   const taskIds = sortedTasks.map((task) => task.id);
   
@@ -190,7 +212,17 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {sortedTasks.length === 0 ? (
             <div className="text-center text-gray-400 dark:text-gray-500 py-8 text-sm">
-              Nenhuma tarefa ainda
+              {column.tasks.length === 0 ? (
+                <>
+                  <p className="mb-2">Nenhuma tarefa ainda</p>
+                  <p className="text-xs opacity-75">Clique no botão + para adicionar</p>
+                </>
+              ) : (
+                <>
+                  <p className="mb-2">Nenhuma tarefa neste mês</p>
+                  <p className="text-xs opacity-75">Tente navegar para outro mês</p>
+                </>
+              )}
             </div>
           ) : (
             sortedTasks.map((task, index) => (

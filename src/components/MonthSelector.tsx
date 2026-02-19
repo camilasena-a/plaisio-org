@@ -1,10 +1,26 @@
+import { useMemo } from 'react';
 import { useStore } from '@/store/useStore';
-import { formatMonthRange, getNextMonth, getPreviousMonth } from '@/utils/date';
+import { formatMonthRange, getNextMonth, getPreviousMonth, isTaskInMonth, isTaskOverdue } from '@/utils/date';
 import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from './icons';
 import { ThemeToggle } from './ThemeToggle';
 
 export function MonthSelector() {
-  const { monthStartDate, monthEndDate, updateMonth, initializeMonth } = useStore();
+  const { monthStartDate, monthEndDate, updateMonth, initializeMonth, columns } = useStore();
+  
+  // Calcula estatísticas do mês
+  const monthStats = useMemo(() => {
+    const allTasks = columns.flatMap(col => col.tasks);
+    const monthTasks = allTasks.filter(task => 
+      isTaskInMonth(task.dueDate, monthStartDate, monthEndDate)
+    );
+    
+    const total = monthTasks.length;
+    const done = monthTasks.filter(t => t.status === 'done').length;
+    const overdue = monthTasks.filter(t => t.dueDate && isTaskOverdue(t.dueDate)).length;
+    const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+    
+    return { total, done, overdue, progress };
+  }, [columns, monthStartDate, monthEndDate]);
 
   const handlePreviousMonth = () => {
     const { startDate, endDate } = getPreviousMonth(monthStartDate);
@@ -43,6 +59,22 @@ export function MonthSelector() {
           <div className="font-semibold text-gray-900 dark:text-white">
             {formatMonthRange(monthStartDate, monthEndDate)}
           </div>
+          {/* Estatísticas do mês */}
+          {monthStats.total > 0 && (
+            <div className="flex items-center justify-center gap-3 mt-2 text-xs">
+              <span className="text-gray-600 dark:text-gray-400">
+                {monthStats.total} tarefa{monthStats.total !== 1 ? 's' : ''}
+              </span>
+              <span className="text-green-600 dark:text-green-400 font-medium">
+                {monthStats.done} concluída{monthStats.done !== 1 ? 's' : ''}
+              </span>
+              {monthStats.overdue > 0 && (
+                <span className="text-red-600 dark:text-red-400 font-medium">
+                  {monthStats.overdue} vencida{monthStats.overdue !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <button

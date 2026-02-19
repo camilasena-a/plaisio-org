@@ -24,6 +24,7 @@ export function TaskModal({
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [subject, setSubject] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [dateError, setDateError] = useState('');
 
   useEffect(() => {
     if (initialTask) {
@@ -164,9 +165,37 @@ export function TaskModal({
                 id="dueDate"
                 type="date"
                 value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                onChange={(e) => {
+                  const selectedDate = e.target.value;
+                  setDueDate(selectedDate);
+                  
+                  // Validação: avisar se a data já passou
+                  if (selectedDate) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const selected = new Date(selectedDate);
+                    selected.setHours(0, 0, 0, 0);
+                    
+                    if (selected < today) {
+                      setDateError('Esta data já passou. Deseja continuar mesmo assim?');
+                    } else {
+                      setDateError('');
+                    }
+                  } else {
+                    setDateError('');
+                  }
+                }}
+                className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                  dateError 
+                    ? 'border-yellow-500 dark:border-yellow-600' 
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}
               />
+              {dateError && (
+                <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
+                  {dateError}
+                </p>
+              )}
             </div>
           </div>
 
