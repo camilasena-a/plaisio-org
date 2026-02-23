@@ -17,9 +17,10 @@ interface ColumnProps {
   onAddTask: (status: ColumnType['id']) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
+  onViewTask?: (task: Task) => void;
 }
 
-export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnProps) {
+export function Column({ column, onAddTask, onEditTask, onDeleteTask, onViewTask }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
   });
@@ -237,6 +238,7 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask }: ColumnPr
                   task={task}
                   onEdit={onEditTask}
                   onDelete={onDeleteTask}
+                  onView={onViewTask}
                 />
               </div>
             ))

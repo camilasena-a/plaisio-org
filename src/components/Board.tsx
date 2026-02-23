@@ -20,9 +20,10 @@ interface BoardProps {
   onAddTask: (status: TaskStatus) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
+  onViewTask?: (task: Task) => void;
 }
 
-export function Board({ onAddTask, onEditTask, onDeleteTask }: BoardProps) {
+export function Board({ onAddTask, onEditTask, onDeleteTask, onViewTask }: BoardProps) {
   const { columns, moveTaskBetweenColumns, reorderTasks } = useStore();
   const { addToast } = useToastStore();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -131,6 +132,7 @@ export function Board({ onAddTask, onEditTask, onDeleteTask }: BoardProps) {
             onAddTask={onAddTask}
             onEditTask={onEditTask}
             onDeleteTask={onDeleteTask}
+            onViewTask={onViewTask}
           />
         ))}
       </div>

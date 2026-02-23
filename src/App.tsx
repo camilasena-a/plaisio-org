@@ -3,6 +3,7 @@ import { useStore } from '@/store/useStore';
 import type { Task, TaskStatus } from '@/types';
 import { Board } from './components/Board';
 import { TaskModal } from './components/TaskModal';
+import { TaskDetailsModal } from './components/TaskDetailsModal';
 import { MonthSelector } from './components/MonthSelector';
 import { ToastContainer } from './components/Toast';
 import { ConfirmDialog } from './components/ConfirmDialog';
@@ -14,6 +15,10 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [initialStatus, setInitialStatus] = useState<TaskStatus>('todo');
+  
+  // Estados para o modal de detalhes
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
   
   // Estados para o modal de confirmação
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -66,6 +71,30 @@ function App() {
     setEditingTask(null);
   };
 
+  const handleViewTask = (task: Task) => {
+    setViewingTask(task);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setViewingTask(null);
+  };
+
+  const handleEditFromDetails = (task: Task) => {
+    setIsDetailsModalOpen(false);
+    setViewingTask(null);
+    setEditingTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteFromDetails = (taskId: string) => {
+    setIsDetailsModalOpen(false);
+    setViewingTask(null);
+    setTaskToDelete(taskId);
+    setIsConfirmOpen(true);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <MonthSelector />
@@ -74,6 +103,7 @@ function App() {
           onAddTask={handleAddTask}
           onEditTask={handleEditTask}
           onDeleteTask={handleDeleteTask}
+          onViewTask={handleViewTask}
         />
       </div>
       <TaskModal
@@ -82,6 +112,13 @@ function App() {
         onSave={handleSaveTask}
         initialTask={editingTask}
         initialStatus={initialStatus}
+      />
+      <TaskDetailsModal
+        isOpen={isDetailsModalOpen}
+        task={viewingTask}
+        onClose={handleCloseDetailsModal}
+        onEdit={handleEditFromDetails}
+        onDelete={handleDeleteFromDetails}
       />
       <ConfirmDialog
         isOpen={isConfirmOpen}

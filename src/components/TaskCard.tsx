@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Task } from '@/types';
@@ -9,9 +10,10 @@ interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
+  onView?: (task: Task) => void;
 }
 
-export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
+export function TaskCard({ task, onEdit, onDelete, onView }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -20,6 +22,8 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
     transition,
     isDragging,
   } = useSortable({ id: task.id });
+
+  const [mouseDownPos, setMouseDownPos] = useState<{ x: number; y: number } | null>(null);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -58,16 +62,56 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
 
   const cardStyles = getCardStyles();
 
+  // Handler para clique no card (não interfere com drag)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Salva a posição inicial do mouse
+    setMouseDownPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Não abre o modal se:
+    // - Estiver arrastando
+    // - Estiver clicando nos botões de ação
+    // - Houver movimento significativo do mouse (drag)
+    if (
+      isDragging ||
+      (e.target as HTMLElement).closest('button') ||
+      (e.target as HTMLElement).closest('svg')
+    ) {
+      return;
+    }
+
+    // Verifica se houve movimento do mouse (drag)
+    if (mouseDownPos) {
+      const deltaX = Math.abs(e.clientX - mouseDownPos.x);
+      const deltaY = Math.abs(e.clientY - mouseDownPos.y);
+      
+      // Se o mouse se moveu mais de 5px, considera como drag
+      if (deltaX > 5 || deltaY > 5) {
+        setMouseDownPos(null);
+        return;
+      }
+    }
+
+    setMouseDownPos(null);
+    
+    if (onView) {
+      onView(task);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
+      onMouseDown={handleMouseDown}
+      onClick={handleCardClick}
       className={`group ${cardStyles.bg} rounded-lg shadow-sm border-2 ${cardStyles.border} p-4 cursor-grab active:cursor-grabbing transition-all duration-200 ${
         isDragging 
           ? 'ring-2 ring-primary-500 scale-105 shadow-xl z-50' 
-          : `hover:shadow-lg hover:scale-[1.02] ${cardStyles.hover}`
+          : `hover:shadow-lg hover:scale-[1.02] ${cardStyles.hover} ${onView ? 'cursor-pointer' : ''}`
       }`}
     >
       <div className="flex items-start justify-between mb-2">
