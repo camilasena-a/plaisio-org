@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import type { Task, TaskStatus } from '@/types';
 import { Board } from './components/Board';
@@ -94,6 +94,30 @@ function App() {
     setTaskToDelete(taskId);
     setIsConfirmOpen(true);
   };
+
+  // Atalho Ctrl+N para nova tarefa
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        handleAddTask('todo');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Listener para tarefa selecionada na busca
+  useEffect(() => {
+    const handleTaskSelected = (e: CustomEvent<Task>) => {
+      const task = e.detail;
+      handleViewTask(task);
+    };
+
+    window.addEventListener('task-selected', handleTaskSelected as EventListener);
+    return () => window.removeEventListener('task-selected', handleTaskSelected as EventListener);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">

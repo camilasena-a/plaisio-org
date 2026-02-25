@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { Task, TaskStatus } from '@/types';
 import { PRIORITY_CONFIG } from '@/utils/constants';
 import { XIcon } from './icons';
@@ -25,6 +25,7 @@ export function TaskModal({
   const [subject, setSubject] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dateError, setDateError] = useState('');
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialTask) {
@@ -43,6 +44,31 @@ export function TaskModal({
       setDueDate('');
     }
   }, [initialTask, initialStatus, isOpen]);
+
+  // Foco automático e fechamento com Escape
+  useEffect(() => {
+    if (isOpen) {
+      // Foca no campo de título quando o modal abre
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 100);
+
+      // Fecha com Escape
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -63,8 +89,14 @@ export function TaskModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             {initialTask ? 'Editar Tarefa' : 'Nova Tarefa'}
@@ -84,6 +116,7 @@ export function TaskModal({
               Título *
             </label>
             <input
+              ref={titleInputRef}
               id="title"
               type="text"
               value={title}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Task } from '@/types';
@@ -13,7 +13,7 @@ interface TaskCardProps {
   onView?: (task: Task) => void;
 }
 
-export function TaskCard({ task, onEdit, onDelete, onView }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, onEdit, onDelete, onView }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -189,4 +189,16 @@ export function TaskCard({ task, onEdit, onDelete, onView }: TaskCardProps) {
       </div>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Comparação customizada para evitar re-renderizações desnecessárias
+  return (
+    prevProps.task.id === nextProps.task.id &&
+    prevProps.task.title === nextProps.task.title &&
+    prevProps.task.description === nextProps.task.description &&
+    prevProps.task.status === nextProps.task.status &&
+    prevProps.task.priority === nextProps.task.priority &&
+    prevProps.task.dueDate === nextProps.task.dueDate &&
+    prevProps.task.subject === nextProps.task.subject &&
+    prevProps.task.updatedAt === nextProps.task.updatedAt
+  );
+});

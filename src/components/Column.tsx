@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, memo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -20,7 +20,7 @@ interface ColumnProps {
   onViewTask?: (task: Task) => void;
 }
 
-export function Column({ column, onAddTask, onEditTask, onDeleteTask, onViewTask }: ColumnProps) {
+export const Column = memo(function Column({ column, onAddTask, onEditTask, onDeleteTask, onViewTask }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
   });
@@ -247,4 +247,14 @@ export function Column({ column, onAddTask, onEditTask, onDeleteTask, onViewTask
       </div>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Comparação customizada: só re-renderiza se as tarefas da coluna mudaram
+  const prevTaskIds = prevProps.column.tasks.map(t => t.id).join(',');
+  const nextTaskIds = nextProps.column.tasks.map(t => t.id).join(',');
+  
+  return (
+    prevProps.column.id === nextProps.column.id &&
+    prevTaskIds === nextTaskIds &&
+    prevProps.column.tasks.length === nextProps.column.tasks.length
+  );
+});

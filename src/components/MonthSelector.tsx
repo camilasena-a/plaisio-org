@@ -3,6 +3,8 @@ import { useStore } from '@/store/useStore';
 import { formatMonthRange, getNextMonth, getPreviousMonth, isTaskInMonth, isTaskOverdue } from '@/utils/date';
 import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from './icons';
 import { ThemeToggle } from './ThemeToggle';
+import { SearchBar } from './SearchBar';
+import { ExportImportMenu } from './ExportImportMenu';
 
 export function MonthSelector() {
   const { monthStartDate, monthEndDate, updateMonth, initializeMonth, columns } = useStore();
@@ -88,6 +90,13 @@ export function MonthSelector() {
 
       {/* Seção Direita - Controles */}
       <div className="flex items-center gap-4 flex-shrink-0">
+        <SearchBar onTaskSelect={(task) => {
+          // Scroll para a tarefa será implementado quando integrarmos com o Board
+          window.dispatchEvent(new CustomEvent('task-selected', { detail: task }));
+        }} />
+        
+        <ExportImportMenu />
+        
         <button
           onClick={handleCurrentMonth}
           className="px-4 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 hover:shadow-md"
