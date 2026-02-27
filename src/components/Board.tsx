@@ -124,7 +124,7 @@ export function Board({ onAddTask, onEditTask, onDeleteTask, onViewTask }: Board
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-6 p-6 overflow-x-auto h-full justify-center">
+      <div className="flex gap-6 p-6 overflow-x-auto h-full justify-center custom-scrollbar">
         {columns.map((column) => (
           <Column
             key={column.id}

@@ -108,7 +108,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, onDelete, onView 
       {...listeners}
       onMouseDown={handleMouseDown}
       onClick={handleCardClick}
-      className={`group ${cardStyles.bg} rounded-lg shadow-sm border-2 ${cardStyles.border} p-4 cursor-grab active:cursor-grabbing transition-all duration-200 ${
+      className={`group ${cardStyles.bg} rounded-lg shadow-sm border-2 ${cardStyles.border} p-4 cursor-grab active:cursor-grabbing transition-all duration-200 animate-slide-up ${
         isDragging 
           ? 'ring-2 ring-primary-500 scale-105 shadow-xl z-50' 
           : `hover:shadow-lg hover:scale-[1.02] ${cardStyles.hover} ${onView ? 'cursor-pointer' : ''}`

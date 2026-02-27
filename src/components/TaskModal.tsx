@@ -25,6 +25,7 @@ export function TaskModal({
   const [subject, setSubject] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dateError, setDateError] = useState('');
+  const [titleError, setTitleError] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,11 +61,25 @@ export function TaskModal({
         }
       };
 
+      // Salva com Ctrl+Enter
+      const handleCtrlEnter = (e: KeyboardEvent) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          const form = document.querySelector('form');
+          if (form) {
+            const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+            form.dispatchEvent(submitEvent);
+          }
+        }
+      };
+
       document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleCtrlEnter);
       document.body.style.overflow = 'hidden';
 
       return () => {
         document.removeEventListener('keydown', handleEscape);
+        document.removeEventListener('keydown', handleCtrlEnter);
         document.body.style.overflow = 'unset';
       };
     }
@@ -74,7 +89,21 @@ export function TaskModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    
+    // Validação do título
+    if (!title.trim()) {
+      setTitleError('O título é obrigatório');
+      titleInputRef.current?.focus();
+      return;
+    }
+
+    if (title.trim().length < 3) {
+      setTitleError('O título deve ter pelo menos 3 caracteres');
+      titleInputRef.current?.focus();
+      return;
+    }
+
+    setTitleError('');
 
     onSave({
       title: title.trim(),
@@ -88,13 +117,23 @@ export function TaskModal({
     onClose();
   };
 
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTitle(value);
+    
+    // Validação em tempo real
+    if (titleError && value.trim().length >= 3) {
+      setTitleError('');
+    }
+  };
+
   return (
     <div 
       className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-in custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
@@ -120,11 +159,24 @@ export function TaskModal({
               id="title"
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              onChange={handleTitleChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                titleError
+                  ? 'border-red-500 dark:border-red-600 focus:ring-red-500 animate-shake'
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
               placeholder="Ex: Estudar capítulo 5 de Matemática"
               required
             />
+            {titleError && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1 animate-slide-up">
+                <span>⚠</span>
+                {titleError}
+              </p>
+            )}
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Pressione <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd> para salvar rapidamente
+            </p>
           </div>
 
           <div>
@@ -242,7 +294,7 @@ export function TaskModal({
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors font-medium"
+              className="flex-1 px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-all duration-200 font-medium hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
             >
               {initialTask ? 'Salvar Alterações' : 'Criar Tarefa'}
             </button>

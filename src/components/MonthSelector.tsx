@@ -5,6 +5,8 @@ import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from './icons';
 import { ThemeToggle } from './ThemeToggle';
 import { SearchBar } from './SearchBar';
 import { ExportImportMenu } from './ExportImportMenu';
+import { UndoRedoButtons } from './UndoRedoButtons';
+import { SubjectFilter } from './SubjectFilter';
 
 export function MonthSelector() {
   const { monthStartDate, monthEndDate, updateMonth, initializeMonth, columns } = useStore();
@@ -94,6 +96,10 @@ export function MonthSelector() {
           // Scroll para a tarefa será implementado quando integrarmos com o Board
           window.dispatchEvent(new CustomEvent('task-selected', { detail: task }));
         }} />
+        
+        <SubjectFilter />
+        
+        <UndoRedoButtons />
         
         <ExportImportMenu />
         

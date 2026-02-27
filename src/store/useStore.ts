@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Task, TaskStatus, Column } from '@/types';
 import { getMonthDates } from '@/utils/date';
+import { useUndoRedoStore } from './useUndoRedoStore';
 
 interface StoreState {
   columns: Column[];
@@ -22,6 +23,7 @@ interface StoreState {
   ) => void;
   updateMonth: (startDate: string, endDate: string) => void;
   initializeMonth: () => void;
+  restoreState: (columns: Column[], monthStartDate: string, monthEndDate: string) => void;
 }
 
 const initialColumns: Column[] = [
@@ -48,35 +50,50 @@ export const useStore = create<StoreState>()(
             updatedAt: new Date().toISOString(),
           };
           
-          set((state) => ({
-            columns: state.columns.map((col) =>
+          set((state) => {
+            const newColumns = state.columns.map((col) =>
               col.id === taskData.status
                 ? { ...col, tasks: [...col.tasks, newTask] }
                 : col
-            ),
-          }));
+            );
+            
+            // Salva no histórico
+            useUndoRedoStore.getState().saveState(newColumns, state.monthStartDate, state.monthEndDate);
+            
+            return { columns: newColumns };
+          });
         },
         
         updateTask: (taskId, updates) => {
-          set((state) => ({
-            columns: state.columns.map((col) => ({
+          set((state) => {
+            const newColumns = state.columns.map((col) => ({
               ...col,
               tasks: col.tasks.map((task) =>
                 task.id === taskId
                   ? { ...task, ...updates, updatedAt: new Date().toISOString() }
                   : task
               ),
-            })),
-          }));
+            }));
+            
+            // Salva no histórico
+            useUndoRedoStore.getState().saveState(newColumns, state.monthStartDate, state.monthEndDate);
+            
+            return { columns: newColumns };
+          });
         },
         
         deleteTask: (taskId) => {
-          set((state) => ({
-            columns: state.columns.map((col) => ({
+          set((state) => {
+            const newColumns = state.columns.map((col) => ({
               ...col,
               tasks: col.tasks.filter((task) => task.id !== taskId),
-            })),
-          }));
+            }));
+            
+            // Salva no histórico
+            useUndoRedoStore.getState().saveState(newColumns, state.monthStartDate, state.monthEndDate);
+            
+            return { columns: newColumns };
+          });
         },
         
         moveTask: (taskId, newStatus, newIndex) => {
@@ -115,8 +132,8 @@ export const useStore = create<StoreState>()(
         },
         
         reorderTasks: (status, startIndex, endIndex) => {
-          set((state) => ({
-            columns: state.columns.map((col) => {
+          set((state) => {
+            const newColumns = state.columns.map((col) => {
               if (col.id !== status) return col;
               
               const newTasks = [...col.tasks];
@@ -124,8 +141,17 @@ export const useStore = create<StoreState>()(
               newTasks.splice(endIndex, 0, removed);
               
               return { ...col, tasks: newTasks };
-            }),
-          }));
+            });
+            
+            // Salva no histórico apenas se realmente mudou
+            const oldTasks = state.columns.find(c => c.id === status)?.tasks || [];
+            const newTasks = newColumns.find(c => c.id === status)?.tasks || [];
+            if (JSON.stringify(oldTasks.map(t => t.id)) !== JSON.stringify(newTasks.map(t => t.id))) {
+              useUndoRedoStore.getState().saveState(newColumns, state.monthStartDate, state.monthEndDate);
+            }
+            
+            return { columns: newColumns };
+          });
         },
         
         moveTaskBetweenColumns: (
@@ -158,11 +184,14 @@ export const useStore = create<StoreState>()(
             const newTasks = [...targetColumn.tasks];
             newTasks.splice(destinationIndex, 0, taskToMove);
             
-            return {
-              columns: updatedColumns.map((col) =>
-                col.id === destinationStatus ? { ...col, tasks: newTasks } : col
-              ),
-            };
+            const finalColumns = updatedColumns.map((col) =>
+              col.id === destinationStatus ? { ...col, tasks: newTasks } : col
+            );
+            
+            // Salva no histórico
+            useUndoRedoStore.getState().saveState(finalColumns, state.monthStartDate, state.monthEndDate);
+            
+            return { columns: finalColumns };
           });
         },
         
@@ -173,6 +202,10 @@ export const useStore = create<StoreState>()(
         initializeMonth: () => {
           const { startDate, endDate } = getMonthDates(new Date());
           set({ monthStartDate: startDate, monthEndDate: endDate });
+        },
+        
+        restoreState: (columns, monthStartDate, monthEndDate) => {
+          set({ columns, monthStartDate, monthEndDate });
         },
       };
     },

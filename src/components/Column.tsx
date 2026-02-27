@@ -10,6 +10,7 @@ import { COLUMN_CONFIG, PRIORITY_CONFIG } from '@/utils/constants';
 import { PlusIcon, FilterIcon, XIcon } from './icons';
 import { useStore } from '@/store/useStore';
 import { useColumnFilterStore } from '@/store/useColumnFilterStore';
+import { useSubjectFilterStore } from '@/store/useSubjectFilterStore';
 import { sortTasksByDueDateAndPriority, isTaskInMonth, getPreviousMonth, getMonthDates } from '@/utils/date';
 
 interface ColumnProps {
@@ -27,6 +28,7 @@ export const Column = memo(function Column({ column, onAddTask, onEditTask, onDe
 
   const { columns, monthStartDate, monthEndDate } = useStore();
   const { columnFilters, togglePriority, clearColumnFilter, hasActiveFilter } = useColumnFilterStore();
+  const { selectedSubject } = useSubjectFilterStore();
   const config = COLUMN_CONFIG[column.id];
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
@@ -69,9 +71,14 @@ export const Column = memo(function Column({ column, onAddTask, onEditTask, onDe
       tasksToShow = tasksToShow.filter((task) => activeFilters.includes(task.priority));
     }
     
+    // Filtra por matéria se houver filtro global
+    if (selectedSubject) {
+      tasksToShow = tasksToShow.filter((task) => task.subject === selectedSubject);
+    }
+    
     // Ordena por data de entrega e depois por prioridade
     return sortTasksByDueDateAndPriority(tasksToShow);
-  }, [column.tasks, column.id, activeFilters, hasFilter, monthStartDate, monthEndDate]);
+  }, [column.tasks, column.id, activeFilters, hasFilter, selectedSubject, monthStartDate, monthEndDate]);
   
   const taskIds = sortedTasks.map((task) => task.id);
   
@@ -204,7 +211,7 @@ export const Column = memo(function Column({ column, onAddTask, onEditTask, onDe
 
       <div
         ref={setNodeRef}
-        className={`flex-1 p-4 space-y-3 overflow-y-auto rounded-b-lg transition-all duration-200 ${
+        className={`flex-1 p-4 space-y-3 overflow-y-auto rounded-b-lg transition-all duration-200 custom-scrollbar ${
           isOver 
             ? config.hoverColor
             : `${config.color} group-hover:bg-opacity-80`
