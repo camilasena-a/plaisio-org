@@ -14,13 +14,45 @@ import { useSubjectFilterStore } from '@/store/useSubjectFilterStore';
 import { sortTasksByDueDateAndPriority, isTaskInMonth, getPreviousMonth, getMonthDates } from '@/utils/date';
 
 interface ColumnProps {
+  /** Dados da coluna (id, título e tarefas) */
   column: ColumnType;
+  /** Callback chamado quando o usuário quer adicionar uma tarefa nesta coluna */
   onAddTask: (status: ColumnType['id']) => void;
+  /** Callback chamado quando o usuário quer editar uma tarefa */
   onEditTask: (task: Task) => void;
+  /** Callback chamado quando o usuário quer deletar uma tarefa */
   onDeleteTask: (taskId: string) => void;
+  /** Callback opcional chamado quando o usuário quer visualizar detalhes de uma tarefa */
   onViewTask?: (task: Task) => void;
 }
 
+/**
+ * Componente de coluna do Kanban
+ * Exibe tarefas filtradas e ordenadas, suporta drag and drop,
+ * filtros por prioridade e filtro por matéria
+ * 
+ * Funcionalidades:
+ * - Drop zone para tarefas arrastadas
+ * - Filtro por prioridade (baixa, média, alta)
+ * - Filtro por matéria (global)
+ * - Ordenação por data de entrega e prioridade
+ * - Barra de progresso da coluna
+ * - Contador de tarefas visíveis
+ * 
+ * @param props - Propriedades do componente
+ * @returns Componente de coluna do Kanban
+ * 
+ * @example
+ * ```tsx
+ * <Column
+ *   column={column}
+ *   onAddTask={(status) => handleAddTask(status)}
+ *   onEditTask={(task) => handleEditTask(task)}
+ *   onDeleteTask={(id) => handleDeleteTask(id)}
+ *   onViewTask={(task) => handleViewTask(task)}
+ * />
+ * ```
+ */
 export const Column = memo(function Column({ column, onAddTask, onEditTask, onDeleteTask, onViewTask }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
@@ -96,7 +128,11 @@ export const Column = memo(function Column({ column, onAddTask, onEditTask, onDe
   const columnProgress = totalTasks > 0 ? (column.tasks.length / totalTasks) * 100 : 0;
 
   return (
-    <div className="flex flex-col h-full min-w-[300px] max-w-[350px] group">
+    <div 
+      className="flex flex-col h-full min-w-[300px] max-w-[350px] group"
+      role="region"
+      aria-label={`Coluna ${column.title} com ${sortedTasks.length} tarefa${sortedTasks.length !== 1 ? 's' : ''}`}
+    >
       <div
         className={`flex flex-col rounded-t-lg border-2 transition-all duration-200 ${
           isOver 
@@ -110,7 +146,10 @@ export const Column = memo(function Column({ column, onAddTask, onEditTask, onDe
             <h2 className={`font-bold ${config.headerTextColor}`}>
               {column.title}
             </h2>
-            <span className={`bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-full border ${config.borderColor}`}>
+            <span 
+              className={`bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-full border ${config.borderColor}`}
+              aria-label={`${sortedTasks.length} tarefa${sortedTasks.length !== 1 ? 's' : ''} nesta coluna`}
+            >
               {sortedTasks.length}
             </span>
           </div>
@@ -216,10 +255,16 @@ export const Column = memo(function Column({ column, onAddTask, onEditTask, onDe
             ? config.hoverColor
             : `${config.color} group-hover:bg-opacity-80`
         } min-h-[400px]`}
+        role="list"
+        aria-label={`Lista de tarefas em ${column.title}`}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {sortedTasks.length === 0 ? (
-            <div className="text-center text-gray-400 dark:text-gray-500 py-8 text-sm">
+            <div 
+              className="text-center text-gray-400 dark:text-gray-500 py-8 text-sm"
+              role="status"
+              aria-live="polite"
+            >
               {column.tasks.length === 0 ? (
                 <>
                   <p className="mb-2">Nenhuma tarefa ainda</p>
@@ -240,6 +285,7 @@ export const Column = memo(function Column({ column, onAddTask, onEditTask, onDe
                 style={{
                   animationDelay: `${index * 0.05}s`,
                 }}
+                role="listitem"
               >
                 <TaskCard
                   task={task}

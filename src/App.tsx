@@ -9,6 +9,19 @@ import { ToastContainer } from './components/Toast';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { useToastStore } from '@/store/useToastStore';
 
+/**
+ * Componente principal da aplicação
+ * Gerencia o estado global da aplicação, modais e handlers de eventos
+ * 
+ * Funcionalidades:
+ * - Gerenciamento de tarefas (criar, editar, deletar, visualizar)
+ * - Modais de criação/edição e detalhes
+ * - Diálogo de confirmação para exclusão
+ * - Atalhos de teclado (Ctrl+N para nova tarefa)
+ * - Integração com busca de tarefas
+ * 
+ * @returns Componente principal da aplicação
+ */
 function App() {
   const { addTask, updateTask, deleteTask } = useStore();
   const { addToast } = useToastStore();

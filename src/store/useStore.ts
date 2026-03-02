@@ -3,6 +3,9 @@ import { persist } from 'zustand/middleware';
 import type { Task, TaskStatus, Column } from '@/types';
 import { getMonthDates } from '@/utils/date';
 import { useUndoRedoStore } from './useUndoRedoStore';
+import { validateTask, validateColumns } from '@/utils/validation';
+import { useToastStore } from './useToastStore';
+import { zustandStorage, checkStorageAvailability } from '@/utils/zustandStorage';
 
 interface StoreState {
   columns: Column[];
@@ -43,43 +46,83 @@ export const useStore = create<StoreState>()(
         monthEndDate: endDate,
         
         addTask: (taskData) => {
-          const newTask: Task = {
-            ...taskData,
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          
-          set((state) => {
-            const newColumns = state.columns.map((col) =>
-              col.id === taskData.status
-                ? { ...col, tasks: [...col.tasks, newTask] }
-                : col
-            );
+          // Validação dos dados antes de adicionar
+          const validation = validateTask(taskData);
+          if (!validation.isValid) {
+            const { addToast } = useToastStore.getState();
+            addToast(`Erro ao criar tarefa: ${validation.errors.join(', ')}`, 'error');
+            console.error('Erro de validação ao adicionar tarefa:', validation.errors);
+            return;
+          }
+
+          try {
+            const newTask: Task = {
+              ...taskData,
+              id: crypto.randomUUID(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
             
-            // Salva no histórico
-            useUndoRedoStore.getState().saveState(newColumns, state.monthStartDate, state.monthEndDate);
-            
-            return { columns: newColumns };
-          });
+            set((state) => {
+              const newColumns = state.columns.map((col) =>
+                col.id === taskData.status
+                  ? { ...col, tasks: [...col.tasks, newTask] }
+                  : col
+              );
+              
+              // Salva no histórico
+              useUndoRedoStore.getState().saveState(newColumns, state.monthStartDate, state.monthEndDate);
+              
+              return { columns: newColumns };
+            });
+          } catch (error) {
+            const { addToast } = useToastStore.getState();
+            addToast('Erro ao adicionar tarefa. Tente novamente.', 'error');
+            console.error('Erro ao adicionar tarefa:', error);
+          }
         },
         
         updateTask: (taskId, updates) => {
-          set((state) => {
-            const newColumns = state.columns.map((col) => ({
-              ...col,
-              tasks: col.tasks.map((task) =>
-                task.id === taskId
-                  ? { ...task, ...updates, updatedAt: new Date().toISOString() }
-                  : task
-              ),
-            }));
-            
-            // Salva no histórico
-            useUndoRedoStore.getState().saveState(newColumns, state.monthStartDate, state.monthEndDate);
-            
-            return { columns: newColumns };
-          });
+          // Validação dos dados antes de atualizar
+          const validation = validateTask(updates);
+          if (!validation.isValid) {
+            const { addToast } = useToastStore.getState();
+            addToast(`Erro ao atualizar tarefa: ${validation.errors.join(', ')}`, 'error');
+            console.error('Erro de validação ao atualizar tarefa:', validation.errors);
+            return;
+          }
+
+          try {
+            set((state) => {
+              const taskExists = state.columns.some((col) =>
+                col.tasks.some((task) => task.id === taskId)
+              );
+
+              if (!taskExists) {
+                const { addToast } = useToastStore.getState();
+                addToast('Tarefa não encontrada', 'error');
+                return state;
+              }
+
+              const newColumns = state.columns.map((col) => ({
+                ...col,
+                tasks: col.tasks.map((task) =>
+                  task.id === taskId
+                    ? { ...task, ...updates, updatedAt: new Date().toISOString() }
+                    : task
+                ),
+              }));
+              
+              // Salva no histórico
+              useUndoRedoStore.getState().saveState(newColumns, state.monthStartDate, state.monthEndDate);
+              
+              return { columns: newColumns };
+            });
+          } catch (error) {
+            const { addToast } = useToastStore.getState();
+            addToast('Erro ao atualizar tarefa. Tente novamente.', 'error');
+            console.error('Erro ao atualizar tarefa:', error);
+          }
         },
         
         deleteTask: (taskId) => {
@@ -205,17 +248,46 @@ export const useStore = create<StoreState>()(
         },
         
         restoreState: (columns, monthStartDate, monthEndDate) => {
-          set({ columns, monthStartDate, monthEndDate });
+          // Validação antes de restaurar o estado
+          const validation = validateColumns(columns);
+          if (!validation.isValid) {
+            const { addToast } = useToastStore.getState();
+            addToast(`Erro ao restaurar dados: ${validation.errors.join(', ')}`, 'error');
+            console.error('Erro de validação ao restaurar estado:', validation.errors);
+            return;
+          }
+
+          try {
+            set({ columns, monthStartDate, monthEndDate });
+          } catch (error) {
+            const { addToast } = useToastStore.getState();
+            addToast('Erro ao restaurar dados. Tente novamente.', 'error');
+            console.error('Erro ao restaurar estado:', error);
+          }
         },
       };
     },
     {
       name: 'plaisio-org-storage',
+      storage: zustandStorage,
       partialize: (state) => ({
         columns: state.columns,
         monthStartDate: state.monthStartDate,
         monthEndDate: state.monthEndDate,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Verifica disponibilidade do storage após reidratação
+        checkStorageAvailability();
+        if (state) {
+          // Valida os dados após reidratação
+          const validation = validateColumns(state.columns);
+          if (!validation.isValid) {
+            console.warn('Dados inválidos encontrados após reidratação:', validation.errors);
+            const { addToast } = useToastStore.getState();
+            addToast('Alguns dados podem estar corrompidos. Verifique suas tarefas.', 'error');
+          }
+        }
+      },
     }
   )
 );

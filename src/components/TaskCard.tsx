@@ -7,12 +7,40 @@ import { formatDate, isTaskOverdue, isTaskDueToday } from '@/utils/date';
 import { TrashIcon, EditIcon, CalendarIcon, AlertIcon } from './icons';
 
 interface TaskCardProps {
+  /** Dados da tarefa a ser exibida */
   task: Task;
+  /** Callback chamado quando o usuário quer editar a tarefa */
   onEdit: (task: Task) => void;
+  /** Callback chamado quando o usuário quer deletar a tarefa */
   onDelete: (taskId: string) => void;
+  /** Callback opcional chamado quando o usuário clica no card para visualizar detalhes */
   onView?: (task: Task) => void;
 }
 
+/**
+ * Componente de card de tarefa
+ * Exibe informações da tarefa com suporte a drag and drop
+ * 
+ * Funcionalidades:
+ * - Drag and drop (arrastar e soltar)
+ * - Indicadores visuais de prioridade
+ * - Indicadores de vencimento (vencida, vence hoje)
+ * - Botões de ação (editar, deletar)
+ * - Clique no card para visualizar detalhes (não interfere com drag)
+ * 
+ * @param props - Propriedades do componente
+ * @returns Componente de card de tarefa
+ * 
+ * @example
+ * ```tsx
+ * <TaskCard
+ *   task={task}
+ *   onEdit={(task) => handleEdit(task)}
+ *   onDelete={(id) => handleDelete(id)}
+ *   onView={(task) => handleView(task)}
+ * />
+ * ```
+ */
 export const TaskCard = memo(function TaskCard({ task, onEdit, onDelete, onView }: TaskCardProps) {
   const {
     attributes,
@@ -108,14 +136,27 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, onDelete, onView 
       {...listeners}
       onMouseDown={handleMouseDown}
       onClick={handleCardClick}
+      role="article"
+      aria-label={`Tarefa: ${task.title}`}
+      aria-describedby={`task-${task.id}-description`}
+      tabIndex={onView ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onView && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onView(task);
+        }
+      }}
       className={`group ${cardStyles.bg} rounded-lg shadow-sm border-2 ${cardStyles.border} p-4 cursor-grab active:cursor-grabbing transition-all duration-200 animate-slide-up ${
         isDragging 
           ? 'ring-2 ring-primary-500 scale-105 shadow-xl z-50' 
-          : `hover:shadow-lg hover:scale-[1.02] ${cardStyles.hover} ${onView ? 'cursor-pointer' : ''}`
+          : `hover:shadow-lg hover:scale-[1.02] ${cardStyles.hover} ${onView ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2' : ''}`
       }`}
     >
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-semibold text-gray-900 dark:text-white text-sm flex-1 pr-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+        <h3 
+          className="font-semibold text-gray-900 dark:text-white text-sm flex-1 pr-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"
+          id={`task-${task.id}-title`}
+        >
           {task.title}
         </h3>
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -143,21 +184,32 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, onDelete, onView 
       </div>
 
       {task.description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+        <p 
+          id={`task-${task.id}-description`}
+          className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2"
+        >
           {task.description}
         </p>
       )}
 
       <div className="flex flex-wrap gap-2 items-center">
         {isOverdue && (
-          <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-500 dark:bg-red-600 text-white flex items-center gap-1">
-            <AlertIcon className="w-3 h-3" />
+          <span 
+            className="px-2 py-1 rounded-full text-xs font-bold bg-red-500 dark:bg-red-600 text-white flex items-center gap-1"
+            role="status"
+            aria-label="Tarefa vencida"
+          >
+            <AlertIcon className="w-3 h-3" aria-hidden="true" />
             Vencida
           </span>
         )}
 
         {isDueToday && !isOverdue && (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-950">
+          <span 
+            className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-950"
+            role="status"
+            aria-label="Tarefa vence hoje"
+          >
             Hoje
           </span>
         )}

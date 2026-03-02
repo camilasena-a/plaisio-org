@@ -4,13 +4,37 @@ import { PRIORITY_CONFIG } from '@/utils/constants';
 import { XIcon } from './icons';
 
 interface TaskModalProps {
+  /** Controla se o modal está aberto ou fechado */
   isOpen: boolean;
+  /** Callback chamado quando o modal é fechado */
   onClose: () => void;
+  /** Callback chamado quando a tarefa é salva */
   onSave: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  /** Tarefa inicial para edição (opcional, se não fornecido, cria nova tarefa) */
   initialTask?: Task | null;
+  /** Status inicial da tarefa (usado apenas ao criar nova tarefa) */
   initialStatus?: TaskStatus;
 }
 
+/**
+ * Modal para criar ou editar tarefas
+ * Suporta validação de dados, atalhos de teclado (Ctrl+Enter para salvar, Esc para fechar)
+ * e foco automático no campo de título
+ * 
+ * @param props - Propriedades do componente
+ * @returns Componente de modal para criação/edição de tarefas
+ * 
+ * @example
+ * ```tsx
+ * <TaskModal
+ *   isOpen={isOpen}
+ *   onClose={() => setIsOpen(false)}
+ *   onSave={(task) => handleSave(task)}
+ *   initialTask={editingTask}
+ *   initialStatus="todo"
+ * />
+ * ```
+ */
 export function TaskModal({
   isOpen,
   onClose,
@@ -131,23 +155,37 @@ export function TaskModal({
     <div 
       className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="task-modal-title"
+      aria-describedby="task-modal-description"
     >
       <div 
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-in custom-scrollbar"
         onClick={(e) => e.stopPropagation()}
+        role="document"
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 
+            id="task-modal-title"
+            className="text-2xl font-bold text-gray-900 dark:text-white"
+          >
             {initialTask ? 'Editar Tarefa' : 'Nova Tarefa'}
           </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            aria-label="Fechar"
+            aria-label="Fechar modal"
+            type="button"
           >
-            <XIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <XIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" aria-hidden="true" />
           </button>
         </div>
+        <p id="task-modal-description" className="sr-only">
+          {initialTask 
+            ? 'Formulário para editar uma tarefa existente' 
+            : 'Formulário para criar uma nova tarefa'}
+        </p>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
@@ -169,13 +207,17 @@ export function TaskModal({
               required
             />
             {titleError && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1 animate-slide-up">
-                <span>⚠</span>
+              <p 
+                className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1 animate-slide-up"
+                role="alert"
+                aria-live="polite"
+              >
+                <span aria-hidden="true">⚠</span>
                 {titleError}
               </p>
             )}
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Pressione <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd> para salvar rapidamente
+              Pressione <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs" aria-label="Control Enter">Ctrl+Enter</kbd> para salvar rapidamente
             </p>
           </div>
 
